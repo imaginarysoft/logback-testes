@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<configuration>
+
+  <statusListener class="ch.qos.logback.core.status.OnConsoleStatusListener" />
+
+	<!-- <property resource="properties/log.properties" /> -->
+    <timestamp key="bySecond" datePattern="ddMMyyyy'T'HHmmss"/>  
+    <contextName>myAppName</contextName>
+    <property name="driverClass" value="org.postgresql.Driver" />
+    <property name="url" value="jdbc:postgresql://localhost/imobys" /> 
+    <property name="user" value="postgres" />
+    <property name="password" value="admin" />
+       <property name="schema" value="log" />
+    
+    
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<layout class="ch.qos.logback.classic.PatternLayout">
+			<pattern>%-4relative [%thread] %mdc %-5level %class - %msg%n</pattern>
+		</layout>
+	</appender>
+
+
+
+
+
+  
+
+
+  <appender name="SIFT" class="ch.qos.logback.classic.sift.SiftingAppender">
+    <!-- in the absence of the class attribute, it is assumed that the
+         desired discriminator type is
+         ch.qos.logback.classic.sift.MDCBasedDiscriminator -->
+	    <discriminator>
+	      <key>dominio</key>
+	      <defaultValue>DOMINIO_DEFAULT</defaultValue>
+	    </discriminator>
+	    <sift>	          
+			   <appender name="FILE_ROLLING" class="ch.qos.logback.core.rolling.RollingFileAppender">
+				
+				     <file>${dominio}/logFile.log</file>
+				     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+				      <!-- daily rollover -->
+				      <fileNamePattern>${dominio}/logFile.%d{yyyy-MM-dd}.log</fileNamePattern>
+				       <!-- keep 120 days' worth of history -->
+				      <maxHistory>120</maxHistory>
+				    </rollingPolicy>   
+			    
+				    <append>true</append>
+				    <layout class="ch.qos.logback.classic.PatternLayout">
+				          <pattern>%d  %contextName  [%thread] %level %mdc %logger{35} - %msg%n</pattern>
+				    </layout>
+			  </appender>  	  
+        </sift>
+  </appender>
+  
+  
+   <!--  substituir por
+   <connectionSource class="ch.qos.logback.core.db.JNDIConnectionSource">
+       please note the "java:comp/env/" prefix
+      jndiLocationjava:comp/env/jdbc/logging jndiLocation
+    connectionSource
+    http://logback.qos.ch/manual/appenders.html
+    -->
+  
+	<appender name="DB" class="ch.qos.logback.classic.db.DBAppender">
+		<connectionSource class="ch.qos.logback.core.db.DriverManagerConnectionSource">
+			<driverClass>${driverClass}</driverClass>
+			<url>${url}</url>
+			<user>${user}</user>
+			<password>${password}</password>
+			<schema>${schema}</schema>
+		</connectionSource>
+		<insertHeaders>true</insertHeaders>
+		<sqlDialect class="ch.qos.logback.core.db.dialect.PostgreSQLDialect" />
+        <insertHeaders>true</insertHeaders>
+  
+	</appender>
+
+  
+<!--   <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender"> -->
+<!--     <appender-ref ref="SIFT" /> -->
+<!--   </appender> -->
+
+	          <appender name="EMAIL" class="ch.qos.logback.classic.net.SMTPAppender">
+	          
+	          
+				 <filter class="ch.qos.logback.classic.filter.LevelFilter">
+			        <level>ERROR</level>
+			        <onMatch>ACCEPT</onMatch>
+			        <onMismatch>DENY</onMismatch>
+			    </filter>
+			
+			    <asynchronousSending>false</asynchronousSending>
+    
+			  
+	    		  			    
+			    <evaluator class="ch.qos.logback.classic.boolex.OnMarkerEvaluator">
+			      <marker>SMTP_TRIGGER</marker>
+			      you specify add as many markers as you want
+			      <marker>ANOTHER_MARKER</marker>
+			    </evaluator>
+			    
+				
+    
+			    <discriminator class="ch.qos.logback.classic.sift.MDCBasedDiscriminator">
+			      <key>dominio</key>
+			      <defaultValue>default</defaultValue>
+			    </discriminator>
+			
+<!-- 			    <cyclicBufferTracker class="ch.qos.logback.core.spi.CyclicBufferTracker"> -->
+<!-- 			      <maxNumberOfBuffers>512</maxNumberOfBuffers> -->
+<!-- 			    </cyclicBufferTracker> -->
+			    
+			    
+					<smtpHost>smtp.gmail.com</smtpHost>
+					<smtpPort>587</smtpPort>
+					 <STARTTLS>true</STARTTLS>
+					<username>xxxx@gmail.com</username>
+					<password>xxxxxxx</password>
+			    
+			    <from>xxxx@gmail.com</from>
+			    <to>xxxxx@hotmail.com</to>
+			<!--     <to>valterlobo@imaginary.com.br</to>  -->
+			        
+			    <subject>[%contextName]: %mdc{dominio}  - >%date</subject>
+			   
+			   <!--  <layout class="ch.qos.logback.classic.PatternLayout">
+			      <pattern>%d  %contextName  [%thread] %level %mdc %logger{35} - %msg%n</pattern>
+			    </layout>   
+			     --> 
+			     
+			    <layout class="ch.qos.logback.classic.html.HTMLLayout">
+			       <pattern>%date%level%logger{24}%mdc%msg</pattern>
+			    </layout>			    
+			    
+
+	
+		
+			    
+  
+        
+		  </appender>
+
+	<root>
+		<level value="error" />
+		 <appender-ref ref="STDOUT" />	
+		 <appender-ref ref="EMAIL" />	
+		  <appender-ref ref="SIFT" />	
+<!-- 		    <appender-ref ref="DB" />	 -->
+		 
+		  
+	</root>
+
+	
+</configuration>
